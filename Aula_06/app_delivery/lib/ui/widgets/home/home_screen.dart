@@ -14,7 +14,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     RestaurantData restaurantData = Provider.of<RestaurantData>(context);
     return Scaffold(
-      drawer: Drawer(),
       appBar: AppBar(
         title: Text('App delivery'),
       ),

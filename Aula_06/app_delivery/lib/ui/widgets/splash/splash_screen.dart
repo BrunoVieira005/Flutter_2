@@ -1,5 +1,6 @@
 import 'package:app_delivery/ui/_core/app_colors.dart';
 import 'package:app_delivery/ui/widgets/home/home_screen.dart';
+import 'package:app_delivery/ui/widgets/home/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -42,7 +43,7 @@ class SplashScreen extends StatelessWidget {
                               Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => HomeScreen()));
+                                      builder: (context) => LoginScreen()));
                             },
                             child: Text('Bora')),
                       )

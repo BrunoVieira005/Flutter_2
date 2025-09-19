@@ -19,10 +19,10 @@ class RestaurantData extends ChangeNotifier {
     try {
       final String jsonString = await rootBundle.loadString('assets/data.json');
       final Map<String, dynamic> data = json.decode(jsonString);
-      final List<dynamic> RestaurantData = data['restaurants'];
+      final List<dynamic> restaurantData = data['restaurants'];
 
       _listRestaurant
-          .addAll(RestaurantData.map((e) => Restaurant.fromMap(e)).toList());
+          .addAll(restaurantData.map((e) => Restaurant.fromMap(e)).toList());
       notifyListeners();
     } catch (e) {
       debugPrint('Erro ao carregar restaurante $e');
