@@ -1,7 +1,5 @@
-// Arquivo para criar as funções para inicializar o banco de dados
-
-import 'package:sqflite/sqflite.dart'; // biblioteca que permite criar o banco de dados
-import 'package:path/path.dart'; // biblioteca para acessar o caminho onde o banco de dados é criado
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 class AppDatabase {
   // Singleton
@@ -13,31 +11,38 @@ class AppDatabase {
 
   Database? _db;
 
+  // Getter para o banco de dados (garante que o banco será aberto corretamente)
   Future<Database> get database async {
     if (_db != null) return _db!;
+
+    // Inicializa o banco de dados se ainda não estiver inicializado
     _db = await _open();
     return _db!;
   }
 
-  // Função open
-
+  // Função que abre o banco de dados e cria a tabela, caso não exista
   Future<Database> _open() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, _dbName);
+    final dbPath = await getDatabasesPath(); // Caminho onde o banco será salvo
+    final path = join(dbPath, _dbName); // Nome do banco de dados
+
+    // Abre o banco de dados ou cria ele se não existir
     return await openDatabase(
       path,
       version: _dbVersion,
       onCreate: (db, version) async {
+        // Criação da tabela se o banco for novo
         await db.execute('''
           CREATE TABLE aluno(
-          id INTEGER PRIMARY KEY  AUTOINCREMENT, 
-          nome TEXT NOT NULL, 
-          nota INTEGER NOT NULL, 
-          materia TEXT NOT NULL)
-          ''');
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            nota INTEGER NOT NULL,
+            materia TEXT NOT NULL
+          )
+        ''');
       },
-      // Se precisar de migrações futuramente
-      // onUpgrade (db, oldV,newV)async
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < newVersion) {}
+      },
     );
   }
 }

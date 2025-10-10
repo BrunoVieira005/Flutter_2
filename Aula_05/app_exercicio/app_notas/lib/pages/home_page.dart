@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _save() async {
     final nome = _nomeCtrl.text.trim();
     final notaStr = _notaCtrl.text.trim();
-    final matStr = _notaCtrl.text.trim();
+    final matStr = _materiaCtrl.text.trim();
 
     if (nome.isEmpty || notaStr.isEmpty || matStr.isEmpty) {
       _snack('Preencha todos os campos.');
@@ -63,15 +63,16 @@ class _HomePageState extends State<HomePage> {
 
     final nota = int.tryParse(notaStr);
     if (nota == null) {
-      _snack('nota precisa ser um numero inteiro');
+      _snack('Nota precisa ser um numero inteiro');
       return;
     }
 
     if (_editing == null) {
-      await _aluno.insert(Aluno(nome: nome, nota: nota, materia: materia));
+      await _aluno.insert(Aluno(nome: nome, nota: nota, materia: matStr));
       _snack('Aluno cadastrado');
     } else {
-      await _aluno.update(_editing!.copyWith(nome: nome, nota: nota));
+      await _aluno
+          .update(_editing!.copyWith(nome: nome, nota: nota, materia: matStr));
       _snack('Aluno atualizado');
     }
     _clearForm();
@@ -142,10 +143,20 @@ class _HomePageState extends State<HomePage> {
           TextField(
             controller: _notaCtrl,
             decoration: InputDecoration(
-              labelText: 'nota] (anos)',
+              labelText: 'Nota',
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
+          ),
+          SizedBox(
+            height: 12,
+          ),
+          TextField(
+            controller: _materiaCtrl,
+            decoration: InputDecoration(
+              labelText: 'Matéria',
+              border: OutlineInputBorder(),
+            ),
           ),
           SizedBox(
             height: 12,
@@ -157,7 +168,7 @@ class _HomePageState extends State<HomePage> {
                       onPressed: _save,
                       icon: Icon(isEditing ? Icons.save : Icons.add),
                       label:
-                          Text(isEditing ? 'Salvar alteraçoes' : 'Adicionar'))),
+                          Text(isEditing ? 'Salvar alterações' : 'Adicionar'))),
               if (isEditing) ...[
                 SizedBox(
                   width: 8,
@@ -166,7 +177,7 @@ class _HomePageState extends State<HomePage> {
                     child: OutlinedButton.icon(
                         onPressed: _cancelEdit,
                         icon: Icon(Icons.close),
-                        label: Text('Cancelar')))
+                        label: Text('Cancelar'))),
               ]
             ],
           ),
@@ -197,7 +208,8 @@ class _HomePageState extends State<HomePage> {
                     final aluno = alunos[index];
                     return ListTile(
                       title: Text(aluno.nome),
-                      subtitle: Text('nota] ${aluno.nome}'),
+                      subtitle: Text(
+                          'Nota: ${aluno.nota} - Matéria: ${aluno.materia}'),
                       leading: CircleAvatar(
                         child: Text((aluno.id ?? 0).toString()),
                       ),
@@ -219,7 +231,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   });
             },
-          ))
+          )),
         ],
       ),
     );
