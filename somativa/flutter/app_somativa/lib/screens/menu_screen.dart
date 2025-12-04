@@ -1,34 +1,64 @@
-// menu_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import necessário para o Provider
 import '../models/product_model.dart';
-import 'package:provider/provider.dart';
-import '../providers/cart_provider.dart';
-import 'package:app_somativa/screens/cart_screen.dart';
+import '../services/product_service.dart';
+import '../providers/cart_provider.dart'; // Import do CartProvider
+import 'cart_screen.dart';
+import 'orders_screen.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
+  final String token;
+
+  const MenuScreen({super.key, required this.token});
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  late Future<List<Product>> _futureProducts;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureProducts = ProductService().getProducts(widget.token);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Filtra as listas
-    final lanches = mockProducts.where((p) => p.type == 'lanche').toList();
-    final pizzas = mockProducts.where((p) => p.type == 'pizza').toList();
-
     return DefaultTabController(
-      length: 2, // Temos 2 abas: Lanches e Pizzas
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: Text("Mange Eats", style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.red,
-          centerTitle: true,
           actions: [
-            // Ícone do Carrinho (iremos implementar a ação depois)
+            // Botão Histórico
+            IconButton(
+              icon: Icon(Icons.history, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    // CORREÇÃO: Passando o token
+                    builder: (context) => OrdersScreen(token: widget.token),
+                  ),
+                );
+              },
+            ),
+            // Botão Carrinho
             IconButton(
               icon: Icon(Icons.shopping_cart, color: Colors.white),
               onPressed: () {
-                // Navegação para Tela Carrinho
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => CartScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    // CORREÇÃO: Passando o token
+                    builder: (context) => CartScreen(token: widget.token),
+                  ),
+                );
               },
-            )
+            ),
           ],
           bottom: TabBar(
             indicatorColor: Colors.white,
@@ -40,25 +70,39 @@ class MenuScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            // Conteúdo da Aba 1 (Lanches)
-            _buildProductGrid(lanches),
-            // Conteúdo da Aba 2 (Pizzas)
-            _buildProductGrid(pizzas),
-          ],
+        body: FutureBuilder<List<Product>>(
+          future: _futureProducts,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text("Erro: ${snapshot.error}"));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text("Nenhum produto encontrado."));
+            }
+
+            final products = snapshot.data!;
+            final lanches = products.where((p) => p.type == 'lanche').toList();
+            final pizzas = products.where((p) => p.type == 'pizza').toList();
+
+            return TabBarView(
+              children: [
+                _buildProductGrid(lanches),
+                _buildProductGrid(pizzas),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  // Função auxiliar para construir o Grid de produtos
   Widget _buildProductGrid(List<Product> products) {
     return GridView.builder(
       padding: EdgeInsets.all(10),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // 2 colunas
-        childAspectRatio: 0.75, // Altura vs Largura do cartão
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
@@ -67,46 +111,33 @@ class MenuScreen extends StatelessWidget {
         final product = products[index];
         return Card(
           elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Imagem (usando NetworkImage para as URLs ou AssetImage se tiver local)
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Image.network(product.imageUrl, fit: BoxFit.contain),
+                child: Image.network(
+                  product.imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (ctx, err, stack) =>
+                      Icon(Icons.fastfood, size: 50),
                 ),
               ),
-              // Nome e Preço
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    Text(
-                      product.name,
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      "R\$ ${product.price.toStringAsFixed(2)}",
-                      style: TextStyle(
-                          color: Colors.green, fontWeight: FontWeight.bold),
-                    ),
+                    Text(product.name,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text("R\$ ${product.price.toStringAsFixed(2)}",
+                        style: TextStyle(color: Colors.green)),
                   ],
                 ),
               ),
-              // Botão Adicionar
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: // Em menu_screen.dart, dentro do itemBuilder do GridView:
-
-                    ElevatedButton(
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   onPressed: () {
-                    // ADICIONA O PRODUTO AO CARRINHO
                     Provider.of<CartProvider>(context, listen: false)
                         .addItem(product);
 
@@ -116,11 +147,12 @@ class MenuScreen extends StatelessWidget {
                       action: SnackBarAction(
                         label: "VER CARRINHO",
                         onPressed: () {
-                          // Navegar para o carrinho (vamos criar jaja)
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => CartScreen()));
+                                  // CORREÇÃO: Passando o token aqui também!
+                                  builder: (context) =>
+                                      CartScreen(token: widget.token)));
                         },
                       ),
                     ));

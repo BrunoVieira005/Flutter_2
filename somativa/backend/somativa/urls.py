@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.urls import path
-# Importa a view pronta de Login do DRF
 from rest_framework.authtoken.views import obtain_auth_token 
-from app.views import RegisterView
+from app.views import RegisterView, PedidoListCreateView, ProdutoListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -14,4 +13,10 @@ urlpatterns = [
 
     # ROTA DE CADASTRO (Tela B):
     path('api/register/', RegisterView.as_view(), name='api_register'),
+
+    # Rota de Pedidos
+    path('api/pedidos/', PedidoListCreateView.as_view(), name='api_pedidos'),
+
+    # Rota de Produtos
+    path('api/produtos/', ProdutoListView.as_view(), name='api_produtos'),
 ]

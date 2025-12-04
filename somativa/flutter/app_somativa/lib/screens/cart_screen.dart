@@ -1,10 +1,15 @@
-// cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
-import 'package:app_somativa/screens/checkout_screen.dart';
+import 'checkout_screen.dart'; // Certifique-se que o caminho está correto
 
 class CartScreen extends StatelessWidget {
+  // 1. Variável para guardar o Token
+  final String token;
+
+  // 2. Construtor para receber o Token
+  const CartScreen({super.key, required this.token});
+
   @override
   Widget build(BuildContext context) {
     // O Consumer "escuta" o Provider. Se o carrinho mudar, essa parte reconstrói.
@@ -32,7 +37,11 @@ class CartScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final product = cart.items[index];
                           return ListTile(
-                            leading: Image.network(product.imageUrl, width: 50),
+                            leading: Image.network(product.imageUrl, width: 50,
+                                errorBuilder: (context, error, stackTrace) {
+                              return Icon(Icons
+                                  .fastfood); // Fallback se a imagem falhar
+                            }),
                             title: Text(product.name),
                             subtitle:
                                 Text("R\$ ${product.price.toStringAsFixed(2)}"),
@@ -102,15 +111,18 @@ class CartScreen extends StatelessWidget {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red),
-                        // Em cart_screen.dart, no onPressed do botão CONFIRMAR PEDIDO:
+                        // Só habilita se tiver itens no carrinho
                         onPressed: cart.items.isEmpty
                             ? null
                             : () {
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            CheckoutScreen()));
+                                  context,
+                                  MaterialPageRoute(
+                                    // 3. Passando o token adiante para o Checkout
+                                    builder: (context) =>
+                                        CheckoutScreen(token: token),
+                                  ),
+                                );
                               },
                         child: Text("CONFIRMAR PEDIDO",
                             style: TextStyle(color: Colors.white)),
